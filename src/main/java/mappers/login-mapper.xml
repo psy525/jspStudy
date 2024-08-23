@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapper의 namespace는 Mapper 인터페이스와 연동할 때 사용 -->
+<!-- resultType="패키지.밑에있는 무언가" -->
+<mapper namespace="login.LoginMapper">
+	<select id="findMemberById"  parameterType="String" resultType="chapter05.MemberDTO">
+		select
+			mem_id,
+			mem_pass,
+			mem_name,
+			mem_bir,
+			mem_zip,
+			mem_add1,
+			mem_add2,
+			mem_hp,
+			mem_mail
+		from
+			member
+		where
+			mem_id=#{id}
+	</select>
+	
+</mapper>
