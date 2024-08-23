@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapper의 namespace는 Mapper 인터페이스와 연동할 때 사용 -->
+<!-- resultType="패키지.밑에있는 무언가" -->
+<mapper namespace="board.BoardMapper">
+	<resultMap type="board" id="boardMap">
+		<result column="id" property="id"/>
+		<result column="title" property="title"/>
+		<result column="content" property="content"/>
+		<result column="writer" property="writer"/>
+		<result column="hits" property="hits"/>
+		<result column="register_date" property="registerDate"/>
+		<result column="modified_date" property="modifiedDate"/>
+		<collection column="id" property="fileList" select="selectFiles" javaType="list" ofType="file"/>
+		<collection column="id" property="commentList" select="comment.CommentMapper.selectComments" javaType="list" ofType="comment"/>
+	</resultMap>
+	<select id="selectBoards" resultType="board">
+		select
+			id,
+			title,
+			content,
+			writer,
+			hits,
+			register_date,
+			modified_date
+		from
+			board
+		order by
+			id	
+	</select>
+	<select id="selectBoard" parameterType="int" resultMap="boardMap">
+		select
+			id,
+			title,
+			content,
+			writer,
+			hits,
+			register_date,
+			modified_date
+		from
+			board
+		where
+			id=#{id}
+	</select>
+	<insert id="registerBoard" parameterType="board"  
+		useGeneratedKeys="true"  keyColumn="id" keyProperty="id">
+		insert into
+			board
+			(title, content, writer)
+		values
+			(#{title}, #{content}, #{writer})
+	</insert>
+	<update id="modifyBoard" parameterType="board">
+		update
+			board
+		set
+			title=#{title},
+			content=#{content},
+			writer=#{writer},
+			modified_date=sysdate
+		where
+			id=#{id}
+	</update>
+	<delete id="removeBoard" parameterType="int">
+		delete from
+			board
+		where
+			id=#{id}
+	</delete>
+	
+	<!-- 첨부파일 저장: 여러 파일을 저장할 수 있도록 작성해야함 -->
+	<insert id="insertFile"  parameterType="list">
+		<!-- 얘는 하나하나 insert all하는 것 -->
+		<!-- 
+				insert all
+		<foreach collection="">
+			into attached_file
+				(board_id, file_path, file_name, original_name, file_size)
+			valuse
+			(#{boardId}, #{filePath}, #{fileName}, #{originalName}, #{fileSize})
+			
+		</foreach>
+		selecet * from dual
+		 -->
+		<!-- 얘는 전체를 조회해서 거기서 insert? 하는거여서 위에꺼보다 조금 빠름 -->
+		INSERT INTO 
+			ATTACHED_FILE
+			(BOARD_ID, FILE_PATH, FILE_NAME, ORIGINAL_NAME, FILE_SIZE)
+		<foreach collection="list"  item="f" separator="union all">
+		SELECT 
+			#{f.boardId}, #{f.filePath}, #{f.fileName}, #{f.originalName}, #{f.fileSize} 
+		FROM 
+			DUAL
+		</foreach>
+		<!-- 이렇게하는 이유는 서비스에서 반복하면 속도 저하가 심해짐 -->
+		
+		
+<!-- 
+	insert into
+			attached_file
+			(board_id, file_path, file_name, original_name, file_size)
+		values
+			(#{boardId}, #{filePath}, #{fileName}, #{originalName}, #{fileSize})
+ -->	
+	</insert>
+	
+	<select id="selectFiles" parameterType="int" resultType="file">
+		SELECT 
+			ID,
+			BOARD_ID,
+			FILE_PATH,
+			FILE_NAME,
+			ORIGINAL_NAME,
+			FILE_SIZE,
+			REGISTER_DATE		
+		FROM
+			ATTACHED_FILE
+		WHERE
+			BOARD_ID=#{boardId}
+	</select>
+	
+	
+</mapper>
